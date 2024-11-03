@@ -1,0 +1,25 @@
+ALERT 1,"Dumpator by Gunstick/ULM 2024",1," Run ",a%
+' 129
+PRINT "Enter disk drive to image:"
+FORM INPUT 1,a$
+drive=ASC(a$)-ASC("A")
+PRINT "imaging "+a$+"("+drive$+"):"
+IF drive<2
+  ALERT 3,"give harddisk letter C-Z)",1," OK ",a%
+  exit
+ENDIF
+dest$=a$+"_dump.img"
+FILESELECT #"Destination file","",dest$,dest$
+PRINT dest$
+OPEN "O",#4,dest$
+diskdata$=SPACE$(512)
+FOR sector=0 TO 65535
+  PRINT "Reading ";+sector
+  result=BIOS(4,0,VARPTR(diskdata$),1,sector,drive)
+  IF result<>0
+    PRINT "Error on sector ";+sector
+  ENDIF
+  ' on error write previous data
+  WRITE #4,diskdata$
+NEXT sector
+CLOSE #4
