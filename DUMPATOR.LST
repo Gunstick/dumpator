@@ -19,26 +19,33 @@ bpb=BIOS(7,W:drive%)
 ' word datrec
 ' word numcl /* number of clusters */
 ' word bflags
-recsiz%=DPEEK(bpb%)
-clustsiz%=DPEEK(bpb%+2)
-clustsizb%=DPEEK(bpb%+4)
-numcl%=DPEEK(bpb%+14)
+recsiz%=DPEEK(bpb)
+clustsiz%=DPEEK(bpb+2)
+clustsizb%=DPEEK(bpb+4)
+numcl%=DPEEK(bpb+14)
 PRINT "   bytes per sector: ";recsiz%
 PRINT "sectors per cluster: ";clustsiz%
 PRINT "  bytes per cluster: ";clustsizb%
 PRINT " number of clusters: ";numcl%
+disksize=numcl%*clustsizb%
+PRINT "disk is ";disksize;" (";disksize/1024/1024;"MB)"
+PRINT "also ";clustsizb%;"=";recsiz%*clustsiz%;"=";recsiz%;"*";clustsiz%
+IF clustsizb%<>recsiz%*clustsiz%
+  ALERT 3,"BPB makes no sense",1,"OK",a%
+  exit
+ENDIF
 dest$=a$+"_dump.img"
 FILESELECT #"Destination file","",dest$,dest$
 PRINT dest$
 OPEN "O",#4,dest$
-diskdata$=SPACE$(512)
-FOR sector%=0 TO 65535
-  PRINT "Reading ";+sector%
+diskdata$=SPACE$(clustsizb%)
+FOR sector%=0 TO numcl%
+  PRINT "Reading ";sector%;"/";numcl%
   result=BIOS(4,0,VARPTR(diskdata$),1,W:sector%,W:drive%)
   IF result<>0
     PRINT "Error on sector ";+sector%
   ENDIF
   ' on error write previous data
   WRITE #4,diskdata$
-NEXT sector
+NEXT sector%
 CLOSE #4
