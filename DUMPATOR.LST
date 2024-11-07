@@ -40,10 +40,12 @@ PRINT dest$
 OPEN "O",#4,dest$
 diskdata$=SPACE$(clustsizb%)
 FOR sector%=0 TO numcl%
-  PRINT "Reading ";sector%;"/";numcl%
-  result=BIOS(4,0,VARPTR(diskdata$),1,W:sector%,W:drive%)
+  IF sector% MOD 16=0
+    PRINT AT(1,12);"Reading ";sector%;"/";numcl%
+  ENDIF
+  result=BIOS(4,W:4,L:VARPTR(diskdata$),W:1,W:sector%,W:drive%,L:0)
   IF result<>0
-    PRINT "Error on sector ";+sector%
+    PRINT AT(1,13);"Error on sector ";+sector%
   ENDIF
   ' on error write previous data
   WRITE #4,diskdata$
